@@ -67,34 +67,26 @@ def compra_rapida_fbv(request, libro_id):
 
 
 # ============================================================
-# PASO 2: CBV - Misma logica spaghetti, pero separada en
-# metodos GET y POST. Esto es el primer paso de orden.
+# PASO 3: CBV conectada al Service Layer
+# La vista ya no sabe nada de inventario, impuestos ni pagos.
+# Solo habla con el servicio y retorna la respuesta.
 # ============================================================
 class CompraRapidaView(View):
     template_name = 'tienda_app/compra_rapida.html'
 
+    def setup_service(self):
+        gateway = BancoNacionalProcesador()
+        return CompraService(procesador_pago=gateway)
+
     def get(self, request, libro_id):
-        libro = get_object_or_404(Libro, id=libro_id)
-        total = float(libro.precio) * 1.19
-        return render(request, self.template_name, {
-            'libro': libro,
-            'total': total
-        })
+        servicio = self.setup_service()
+        contexto = servicio.obtener_detalle_producto(libro_id)
+        return render(request, self.template_name, contexto)
 
     def post(self, request, libro_id):
-        # La logica de negocio aun reside aqui, pero ya separada del GET
-        libro = get_object_or_404(Libro, id=libro_id)
-        inv = Inventario.objects.get(libro=libro)
-        if inv.cantidad > 0:
-            total = float(libro.precio) * 1.19
-
-            # Aun tiene la violacion DIP: pago acoplado al filesystem
-            with open("pagos_manuales.log", "a") as f:
-                f.write(f"[{datetime.datetime.now()}] Pago CBV: ${total}\n")
-
-            inv.cantidad -= 1
-            inv.save()
-            Orden.objects.create(libro=libro, total=total)
-
-            return HttpResponse(f"Compra exitosa va CBV: {libro.titulo}")
-        return HttpResponse("Sin stock", status=400)
+        servicio = self.setup_service()
+        try:
+            total = servicio.ejecutar_compra(libro_id, cantidad=1)
+            return HttpResponse(f"Compra exitosa: ${ total}")
+        except ValueError as e:
+            return HttpResponse(str(e), status=400)
