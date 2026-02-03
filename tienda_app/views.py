@@ -7,14 +7,9 @@ from .services import CompraService
 from .infra.gateways import BancoNacionalProcesador
 
 
-# ============================================================
-# VISTA ORIGINAL DEL REPO BASE (arquitectura limpia)
-# ============================================================
+# Vista que venía en el repo original del profesor.
+# Su trabajo es simple: recibir la petición y pasarla al servicio.
 class CompraView(View):
-    """
-    CBV: Vista Basada en Clases.
-    Actua como un "Portero": recibe la peticion y delega al servicio.
-    """
     template_name = 'tienda_app/compra.html'
 
     def setup_service(self):
@@ -40,17 +35,17 @@ class CompraView(View):
             }, status=400)
 
 
-# ============================================================
-# PASO 1: FBV Spaghetti (se mantiene como referencia)
-# ============================================================
+# Paso 1: ejemplo de "cómo no hacer las cosas".
+# Todo el peso cae acá: inventario, impuestos, escritura al log...
+# La dejamos como referencia para comparar con la versión refactorizada.
 def compra_rapida_fbv(request, libro_id):
     libro = get_object_or_404(Libro, id=libro_id)
 
     if request.method == 'POST':
-        inventario = Inventario.objects.get(libro=libro)
+        inventario = Inventario.objects.get(libro=libro)  # stock manejado acá, viola SRP
         if inventario.cantidad > 0:
-            total = float(libro.precio) * 1.19
-            with open("pagos_manuales.log", "a") as f:
+            total = float(libro.precio) * 1.19  # IVA hardcodeado, viola OCP
+            with open("pagos_manuales.log", "a") as f:  # escribe al archivo directamente, viola DIP
                 f.write(f"[{datetime.datetime.now()}] Pago FBV: ${total}\n")
             inventario.cantidad -= 1
             inventario.save()
@@ -66,35 +61,29 @@ def compra_rapida_fbv(request, libro_id):
     })
 
 
-# ============================================================
-# PASO 2: CBV - Misma logica spaghetti, pero separada en
-# metodos GET y POST. Esto es el primer paso de orden.
-# ============================================================
+# Paso 2: mismo spaghetti de arriba, pero ahora como clase.
+# El GET y el POST ya están separados, eso es un avance,
+# pero la lógica de negocio sigue acá adentro sin cambios.
 class CompraRapidaView(View):
     template_name = 'tienda_app/compra_rapida.html'
 
     def get(self, request, libro_id):
         libro = get_object_or_404(Libro, id=libro_id)
-        total = float(libro.precio) * 1.19
+        total = float(libro.precio) * 1.19  # IVA hardcodeado, viola OCP
         return render(request, self.template_name, {
             'libro': libro,
             'total': total
         })
 
     def post(self, request, libro_id):
-        # La logica de negocio aun reside aqui, pero ya separada del GET
         libro = get_object_or_404(Libro, id=libro_id)
-        inv = Inventario.objects.get(libro=libro)
+        inv = Inventario.objects.get(libro=libro)  # stock manejado acá, viola SRP
         if inv.cantidad > 0:
-            total = float(libro.precio) * 1.19
-
-            # Aun tiene la violacion DIP: pago acoplado al filesystem
-            with open("pagos_manuales.log", "a") as f:
+            total = float(libro.precio) * 1.19  # IVA hardcodeado, viola OCP
+            with open("pagos_manuales.log", "a") as f:  # escribe al archivo directamente, viola DIP
                 f.write(f"[{datetime.datetime.now()}] Pago CBV: ${total}\n")
-
             inv.cantidad -= 1
             inv.save()
             Orden.objects.create(libro=libro, total=total)
-
             return HttpResponse(f"Compra exitosa va CBV: {libro.titulo}")
         return HttpResponse("Sin stock", status=400)
