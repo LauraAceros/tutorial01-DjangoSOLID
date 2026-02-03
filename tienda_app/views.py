@@ -7,13 +7,12 @@ from .services import CompraService
 from .infra.gateways import BancoNacionalProcesador
 
 
-# ============================================================
-# VISTA ORIGINAL DEL REPO BASE (arquitectura limpia)
-# ============================================================
+# Vista que venía en el repo original del profesor.
+# Su trabajo es simple: recibir la petición y pasarla al servicio.
 class CompraView(View):
     """
-    CBV: Vista Basada en Clases.
-    Actua como un "Portero": recibe la peticion y delega al servicio.
+    Flujo principal de compra.
+    No toca lógica de negocio, solo delega al CompraService.
     """
     template_name = 'tienda_app/compra.html'
 
@@ -40,29 +39,21 @@ class CompraView(View):
             }, status=400)
 
 
-# ============================================================
-# PASO 1: FBV Spaghetti - "Compra Rapida"
-# Esta funcion tiene TODAS las responsabilidades mezcladas.
-# Los comentarios senalan cada violacion SOLID.
-# ============================================================
+# Paso 1: ejemplo de "cómo no hacer las cosas".
+# Todo el peso cae acá: inventario, impuestos, escritura al log...
+# La dejamos como referencia para comparar con la versión refactorizada.
 def compra_rapida_fbv(request, libro_id):
     libro = get_object_or_404(Libro, id=libro_id)
 
     if request.method == 'POST':
-        # VIOLACION SRP: Logica de inventario en la vista
-        inventario = Inventario.objects.get(libro=libro)
+        inventario = Inventario.objects.get(libro=libro)  # stock manejado acá, viola SRP
         if inventario.cantidad > 0:
-            # VIOLACION OCP: Calculo de negocio hardcoded
-            total = float(libro.precio) * 1.19
-
-            # VIOLACION DIP: Proceso de pago acoplado al filesystem
-            with open("pagos_manuales.log", "a") as f:
+            total = float(libro.precio) * 1.19  # IVA hardcodeado, viola OCP
+            with open("pagos_manuales.log", "a") as f:  # escribe al archivo directamente, viola DIP
                 f.write(f"[{datetime.datetime.now()}] Pago FBV: ${total}\n")
-
             inventario.cantidad -= 1
             inventario.save()
             Orden.objects.create(libro=libro, total=total)
-
             return HttpResponse(f"Compra exitosa: {libro.titulo}")
         else:
             return HttpResponse("Sin stock", status=400)
@@ -72,3 +63,4 @@ def compra_rapida_fbv(request, libro_id):
         'libro': libro,
         'total': total_estimado
     })
+
