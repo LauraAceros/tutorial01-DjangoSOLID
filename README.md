@@ -1,75 +1,32 @@
-# 🚀 Django Clean Monolith: De Spaghetti a Grado Empresarial
+#  Django Clean Monolith: De Spaghetti a Grado Empresarial
 
-Este proyecto es una guía práctica para transformar una aplicación de Django tradicional en un sistema con arquitectura de capas, siguiendo principios de ingeniería de software utilizados en consultoría de alto nivel.
-
----
-
-## 🏗️ Resumen de la Arquitectura
-
-Hemos separado las responsabilidades para evitar el antipatrón de la "Vista Gorda" (Fat View), organizando el código en las siguientes capas:
-
-| Capa | Ubicación | Responsabilidad |
-| :--- | :--- | :--- |
-| **Presentación** | `views.py` | Recibir Requests, delegar al servicio y retornar Responses (HTML/JSON). |
-| **Servicio** | `services.py` | Orquestar el flujo de negocio. Es el "Cerebro" que conecta el dominio con los datos. |
-| **Dominio** | `domain/` | Contiene la lógica pura (Impuestos, validaciones) e interfaces (Contratos). |
-| **Infraestructura** | `infra/` | Implementaciones técnicas externas (Pasarelas de pago, logs, APIs). |
-| **Datos** | `models.py` | Definición de tablas y persistencia mediante el ORM de Django. |
-
-
+**Estudiante:** Laura Sofía Aceros (lsacerosm@eafit.edu.co)
+**Repositorio:** [tutorial01-DjangoSOLID](https://github.com/LauraAceros/tutorial01-DjangoSOLID)
 
 ---
 
-## 🛡️ Principios SOLID Aplicados
+##  Progresión del Tutorial por Ramas
 
-1. **S - Single Responsibility:** Cada clase tiene una sola razón para existir. El `CalculadorImpuestos` no sabe de bases de datos; la `View` no sabe de impuestos.
-2. **O - Open/Closed:** El sistema está abierto a nuevas reglas de negocio (ej. nuevos impuestos) sin necesidad de modificar el flujo principal de compra.
-3. **L - Liskov Substitution:** Podemos intercambiar el `BancoNacionalProcesador` por cualquier otro procesador que siga la interfaz `ProcesadorPago`.
-4. **I - Interface Segregation:** Las interfaces en `domain/interfaces.py` son específicas y minimalistas.
-5. **D - Dependency Inversion:** La capa de servicio no depende de una implementación de banco concreta, sino de una abstracción (Interfaz).
+Cada rama representa una etapa del refactoring. Así se puede ver la evolución del código desde el peor escenario hasta la versión final limpia.
+
+| Rama | Qué se hizo |
+| :--- | :--- |
+| `master` | Repo base del profesor con la arquitectura limpia ya implementada (`CompraView`, `CompraService`, etc.) |
+| `paso1-fbv-spaghetti` | Se agregó una función `compra_rapida_fbv` con violaciones SOLID intencionales: SRP, OCP y DIP rotas en una sola función. |
+| `paso2-cbv-migracion` | Se migró esa misma lógica spaghetti a una `CompraRapidaView` (CBV). El GET y POST ya están separados, pero las violaciones siguen ahí. |
+| `paso3-service-layer` | La `CompraRapidaView` se conectó al `CompraService` existente. La vista dejó de saber sobre inventario, impuestos y pagos. El gateway escribe en el log con nombre de la estudiante. |
+| `paso4-evidencia` | Se subió el archivo de log `pagos_locales_LAURA_SOFIA_ACEROS.log` con las 3 transacciones como evidencia de entrega. |
 
 ---
 
-## 🛠️ Instalación y Configuración
+##  Evidencia de Entrega
 
-Siga estos pasos para poner en marcha el entorno local:
+El archivo de evidencia se encuentra en la rama `paso4-evidencia`:
 
-### 1. Clonar y Preparar Entorno
-```bash
-git clone [https://github.com/tu-usuario/django-clean-monolith.git](https://github.com/tu-usuario/django-clean-monolith.git)
-cd django-clean-monolith
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install django
+**Archivo:** `pagos_locales_LAURA_SOFIA_ACEROS.log`
 ```
-### 2. Base de datos
-```bash
-python manage.py makemigrations
-python manage.py migrate
+[2026-02-02 18:43:17.496419] Transaccion exitosa por: $157.07999999999998
+[2026-02-02 18:43:22.043897] Transaccion exitosa por: $157.07999999999998
+[2026-02-02 18:44:21.590395] Transaccion exitosa por: $178.5
 ```
-
-### 3. Crear Datos e Prueba
-Ejecute el shell de Django: python manage.py shell
-```bash
-from tienda.models import Libro, Inventario
-l = Libro.objects.create(titulo="Arquitectura Limpia", precio=250.0)
-Inventario.objects.create(libro=l, cantidad=5)
-```
-
-### 4. Ejecutar
-```bash
-python manage.py runserver
-```
-
-## 📂 Estructura de Archivos (App: tienda_app)
-```
-tienda/
-├── domain/           # Lógica pura e Interfaces
-│   ├── logic.py      # SRP: Cálculo de IVA
-│   └── interfaces.py # DIP: Contrato de Pago
-├── infra/            # Detalles técnicos
-│   └── gateways.py   # Implementación de Banco (Log local)
-├── services.py       # Capa de Servicio (Orquestación)
-├── views.py          # Class-Based Views
-└── models.py         # Modelos de Django
 
