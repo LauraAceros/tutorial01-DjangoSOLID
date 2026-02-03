@@ -7,13 +7,12 @@ from .services import CompraService
 from .infra.gateways import BancoNacionalProcesador
 
 
-# ============================================================
-# VISTA ORIGINAL DEL REPO BASE (arquitectura limpia)
-# ============================================================
+# Vista que venía en el repo original del profesor.
+# Su trabajo es simple: recibir la petición y pasarla al servicio.
 class CompraView(View):
     """
-    CBV: Vista Basada en Clases.
-    Actua como un "Portero": recibe la peticion y delega al servicio.
+    Flujo principal de compra.
+    No toca lógica de negocio, solo delega al CompraService.
     """
     template_name = 'tienda_app/compra.html'
 
@@ -40,17 +39,17 @@ class CompraView(View):
             }, status=400)
 
 
-# ============================================================
-# PASO 1: FBV Spaghetti (se mantiene como referencia)
-# ============================================================
+# Paso 1: ejemplo de "cómo no hacer las cosas".
+# Todo el peso cae acá: inventario, impuestos, escritura al log...
+# La dejamos como referencia para comparar con la versión refactorizada.
 def compra_rapida_fbv(request, libro_id):
     libro = get_object_or_404(Libro, id=libro_id)
 
     if request.method == 'POST':
-        inventario = Inventario.objects.get(libro=libro)
+        inventario = Inventario.objects.get(libro=libro)  # stock manejado acá, viola SRP
         if inventario.cantidad > 0:
-            total = float(libro.precio) * 1.19
-            with open("pagos_manuales.log", "a") as f:
+            total = float(libro.precio) * 1.19  # IVA hardcodeado, viola OCP
+            with open("pagos_manuales.log", "a") as f:  # escribe al archivo directamente, viola DIP
                 f.write(f"[{datetime.datetime.now()}] Pago FBV: ${total}\n")
             inventario.cantidad -= 1
             inventario.save()
@@ -66,15 +65,14 @@ def compra_rapida_fbv(request, libro_id):
     })
 
 
-# ============================================================
-# PASO 3: CBV conectada al Service Layer
-# La vista ya no sabe nada de inventario, impuestos ni pagos.
-# Solo habla con el servicio y retorna la respuesta.
-# ============================================================
+# Paso 3: misma funcionalidad pero hecha bien.
+# Esta vista no sabe nada de inventario, impuestos ni pagos.
+# Todo eso lo resuelve el CompraService, acá solo pedimos resultados.
 class CompraRapidaView(View):
     template_name = 'tienda_app/compra_rapida.html'
 
     def setup_service(self):
+        # conecta el gateway real y lo inyecta al servicio
         gateway = BancoNacionalProcesador()
         return CompraService(procesador_pago=gateway)
 
@@ -86,7 +84,7 @@ class CompraRapidaView(View):
     def post(self, request, libro_id):
         servicio = self.setup_service()
         try:
-            total = servicio.ejecutar_compra(libro_id, cantidad=1)
+            total = servicio.ejecutar_compra(libro_id, cantidad=1)  # el servicio resuelve todo: stock, impuestos, pago y orden
             return HttpResponse(f"Compra exitosa: ${ total}")
         except ValueError as e:
             return HttpResponse(str(e), status=400)
