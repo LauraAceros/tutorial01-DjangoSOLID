@@ -13,5 +13,7 @@ class Inventario(models.Model):
 
 class Orden(models.Model):
     libro = models.ForeignKey(Libro, on_delete=models.CASCADE)
+    usuario = models.CharField(max_length=100, default="Anonimo")  # Usuario y Direccion campos nuevos para taller 2
+    direccion_envio = models.CharField(max_length=300, default="")
     total = models.DecimalField(max_digits=10, decimal_places=2)
     fecha_creacion = models.DateTimeField(auto_now_add=True)

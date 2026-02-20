@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from .models import Libro, Inventario, Orden
 from .services import CompraService
 from .infra.gateways import BancoNacionalProcesador
-
+from .infra.factories import PaymentFactory
 
 # ============================================================
 # VISTA ORIGINAL DEL REPO BASE (arquitectura limpia)
@@ -18,7 +18,8 @@ class CompraView(View):
     template_name = 'tienda_app/compra.html'
 
     def setup_service(self):
-        gateway = BancoNacionalProcesador()
+        # Delegamos la decisión del procesador a la fábrica
+        gateway = PaymentFactory.get_processor()
         return CompraService(procesador_pago=gateway)
 
     def get(self, request, libro_id):
@@ -75,7 +76,8 @@ class CompraRapidaView(View):
     template_name = 'tienda_app/compra_rapida.html'
 
     def setup_service(self):
-        gateway = BancoNacionalProcesador()
+        # Delegamos la decisión del procesador a la fábrica
+        gateway = PaymentFactory.get_processor()
         return CompraService(procesador_pago=gateway)
 
     def get(self, request, libro_id):
