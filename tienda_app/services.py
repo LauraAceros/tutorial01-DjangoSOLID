@@ -1,6 +1,8 @@
 from django.shortcuts import get_object_or_404
 from .models import Libro, Inventario, Orden
 from .domain.logic import CalculadorImpuestos
+from .domain.builders import OrdenBuilder
+
 
 class CompraService:
     """
@@ -10,6 +12,7 @@ class CompraService:
     def __init__(self, procesador_pago):
         # Inyectamos la dependencia (DIP)
         self.procesador_pago = procesador_pago
+        self.builder = OrdenBuilder()  # inicializamos el builder
 
     def obtener_detalle_producto(self, libro_id):
         libro = get_object_or_404(Libro, id=libro_id)
@@ -33,10 +36,15 @@ class CompraService:
         if not pago_exitoso:
             raise Exception("La transacción fue rechazada por el banco.")
 
-        # 4. Persistencia de efectos secundarios
+        # 4. Persistencia usando el Builder
         inv.cantidad -= cantidad
         inv.save()
         
-        Orden.objects.create(libro=libro, total=total)
+        # Uso del Builder: construcción semántica y validada
+        orden = (self.builder
+                 .con_usuario("Laura Sofia Aceros")  # usuario por defecto
+                 .con_libro(libro)
+                 .para_envio("Dirección no especificada")
+                 .build())
         
         return total
