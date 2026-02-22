@@ -1,4 +1,4 @@
-# 🚀 Django Clean Monolith: De Spaghetti a Grado Empresarial
+#  Django Clean Monolith: De Spaghetti a Grado Empresarial
 
 **Estudiante:** Laura Sofía Aceros (lsacerosm@eafit.edu.co)  
 **Repositorio:** [tutorial01-DjangoSOLID](https://github.com/LauraAceros/tutorial01-DjangoSOLID)  
@@ -197,7 +197,7 @@ PAYMENT_PROVIDER=MOCK python manage.py runserver
 
 ---
 
-## 🌐 Uso de la API REST
+##  Uso de la API REST
 
 ### Endpoint: POST /api/v1/comprar/
 
