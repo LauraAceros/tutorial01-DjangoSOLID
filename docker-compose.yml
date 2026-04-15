@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: secret_password
 
   web:
-    build: .
+    image: tienda-app
     command: gunicorn Tienda.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - .:/app
