@@ -1,8 +1,3 @@
-Aquí tienes un archivo `README.md` completo y profesional, redactado en español, diseñado específicamente para este taller **4B**.
-
-Este archivo resume todo el proceso técnico que acabas de realizar, desde la migración del motor de base de datos hasta el despliegue final en la nube.
-
-***
 
 # Tutorial 04B: Despliegue con AWS RDS (MySQL) y Puerto 80
 
