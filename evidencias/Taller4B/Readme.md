@@ -1,9 +1,3 @@
-Aquí tienes un archivo `README.md` completo y profesional, redactado en español, diseñado específicamente para este taller **4B**.
-
-Este archivo resume todo el proceso técnico que acabas de realizar, desde la migración del motor de base de datos hasta el despliegue final en la nube.
-
-***
-
 # Tutorial 04B: Despliegue con AWS RDS (MySQL) y Puerto 80
 
 Este taller consiste en la evolución del despliegue en la nube, migrando de una base de datos local en contenedor (PostgreSQL) a una base de datos administrada **AWS RDS (MySQL)** y configurando el acceso a la aplicación a través del puerto estándar **HTTP (80)**.
