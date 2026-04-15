@@ -5,6 +5,13 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# Instalar dependencias del sistema para MySQL
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    default-libmysqlclient-dev \
+    gcc \
+    && r
+
 # Directorio de trabajo
 WORKDIR /app
 
