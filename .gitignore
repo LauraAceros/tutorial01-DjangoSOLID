@@ -4,3 +4,5 @@ __pycache__/
 db.sqlite3
 pagos_manuales.log
 pagos_locales_LAURA_SOFIA_ACEROS.log
+
+vockey.pem
