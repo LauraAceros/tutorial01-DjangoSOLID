@@ -10,13 +10,11 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret_password
 
-  web:
-    image: tienda-app
+  web_django:
+    image: tienda-app  # Usamos la imagen que ya construimos
     command: gunicorn Tienda.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - .:/app
-    expose:
-      - "8000"
     depends_on:
       - db
     environment:
@@ -26,14 +24,22 @@ services:
       DB_HOST: db
       DB_PORT: 5432
 
-  nginx:
-    image: nginx:1.25-alpine
+  [cite_start]pagos_flask: # El Microservicio (v2) EL ESTRANGULADOR [cite: 88]
+    [cite_start]build: ./microservicio_pagos [cite: 89]
     ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - [cite_start]"5000:5000" # Para pruebas iniciales [cite: 91]
     depends_on:
-      - web
+      - db
+
+  nginx:
+    image: nginx:1.25
+    ports:
+      - [cite_start]"80:80" [cite: 94]
+    volumes:
+      - [cite_start]./nginx/nginx.conf:/etc/nginx/conf.d/default.conf [cite: 96]
+    depends_on:
+      - [cite_start]web_django [cite: 98]
+      - [cite_start]pagos_flask [cite: 99]
 
 volumes:
   postgres_data:
